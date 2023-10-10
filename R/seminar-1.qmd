@@ -1,0 +1,176 @@
+---
+title: "Seminar 1 notes"
+date: 10.10.23
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+### **Seminar 1 10.10.23 notes**
+
+#### Tips til Repeat
+
+Lage en "package" med datasettene våre som alle kan laste ned
+
+#### ggplot
+
+Data --\> asthetics --\> geometric objects --\> facets --\> statistical transformations --\> coordinates --\> theme and annotations
+
+#### How to make "senket skrift"
+
+VO~2max~
+
+#### Fotnote
+
+This is a \[\^footnote\]
+
+\[\^footnote\]
+
+### Other tips
+
+In quarto you can make html, pdf and docx from the same quatro-file. Make html-files first, then docx or pdf
+
+#### Code chuncks
+
+ctrl+alt+i = new code chunck
+
+#### Pipes
+
+\|\> or %\>% ?
+
+Double :: means search for the dataset inside the package
+
+```{r}
+
+library(tidyverse)
+library(exscidata)
+
+dplyr::starwars
+
+# Base R forward pipe operator
+exscidata::dxadata |> # Smart to define that I am searching for this dataset in this package
+  select(participant)
+  
+# Magritter forward pipe operator
+exscidata::dxadata %>% 
+  select(participant)
+  
+# Both pipes operators uses whats on the left side and uses it as the first argument in the next function (dependencies)
+
+
+exscidata::dxadata |>
+  lm(weight ~ height, data = _) # Low line means that data is fetched from what is left from the operator
+
+exscidata::dxadata %>% 
+  lm(weight ~ height, data = .) # The lm function cannot be piped further
+
+# "Pipable" functions have "data" as the first argument
+
+  
+dplyr::select() # The select-function is in several packages, so smart to define that I want to use the one in the dplyr package
+
+
+```
+
+### Reading data into R
+
+readr provides functions for reading and writing delimiter separated files, such as .csv
+
+readxl provides functions for reading excel-files
+
+### The verbs of data wrangling
+
+Verb = take data and make different observations (in dplyr in the tidyverse package)
+
+Useful functions select, rename, relocate, mutate, filter, arrange, summarize
+
+chr = text data dbl = numeric data fctr =
+
+#### The select function
+
+```{r}
+
+library(exscidata)
+glimpse(exscidata::dxadata) # Function that shows us a glimpse of the data
+
+exscidata::dxadata |>
+  select(participant:weight, starts_with("lean.") & contains("_leg")) 
+# : to choose every variable from x to y
+# use start_with and/or contains to select variables
+
+
+exscidata::dxadata |>
+  select(weight, fp = participant) # Selecting weight, and selecting participant and change the name from participant to fp
+
+exscidata::dxadata |>
+  select(participant:weight) |> # Choose variables from participant to weight
+  rename (kg = weight) |> # Rename the variable
+  relocate(kg, .before = participant) # Relocate the order of variables (can use .after and . before)
+
+# Type ?select in the console to get information about the function
+
+exscidata::dxadata |>
+  select(where(is.numeric)) # To check if variables are numeric
+
+
+```
+
+#### The mutate fuction
+
+```{r}
+library(exscidata)
+
+exscidata::dxadata %>% 
+  select(participant:weight, lean.whole) %>%   
+  mutate(rel_lean = 100 * (lean.whole/1000/weight),# % lean mass of total body mass
+         anewvariable = rnorm(80, 0, 1)) %>% 
+  relocate(c(rel_lean, anewvariable), .before = participant) %>% # Combines variables by using c() and then relocate
+  print()
+
+
+```
+
+### Tidy data
+
+One variable is one coloumn, one observation is one row
+
+#### Pivot data
+
+```{r}
+
+library(exscidata)
+
+## Create a small dataset containing volume/leg information
+leg_volume <- exscidata::dxadata %>% 
+  select(participant, time, multiple, single) %>% 
+  pivot_longer(names_to = "volume",  # Making a new column named "volume"
+               values_to = "leg",    # Making a new column named "leg"
+               cols = single:multiple) %>% 
+  distinct(participant, volume, leg) %>% # Only keeping the unique combinations of variables, ie.the variables only appears once (not pre single + multiple and post single + multiple, but just single + multiple for each participant. Ie, each participant appears two times, not four)
+  print()
+
+
+## Create another small dataset containining lean mass/leg information
+lean_mass <- exscidata::dxadata %>% 
+  select(participant, time, starts_with("lean.") & contains("leg")) %>%
+  select(-lean.legs) %>% # Write "contains ("_legs") instead to make code shorter
+  pivot_longer(names_to = "leg",
+               values_to = "leanmass",
+               cols = starts_with("lean")) %>% 
+  mutate(leg = if_else(leg == "lean.left_leg", "L", "R")) %>% # If leg is "lean.left_leg", change name to "L", if not change name to "R"
+  print()
+
+
+## Joining datasets
+
+# Can use left_join, right_join, inner_join, full_join, anti_join
+# Inner_join only uses variables that exist in both datasets (removes variables) so that we dont get missing values
+# If your dataset is complete, it is not 
+
+full_join(leg_volume, lean_mass)
+
+
+
+
+```
