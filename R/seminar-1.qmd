@@ -143,7 +143,7 @@ library(exscidata)
 
 ## Create a small dataset containing volume/leg information
 leg_volume <- exscidata::dxadata %>% 
-  select(participant, time, multiple, single) %>% 
+  select(participant, time, include, multiple, single) %>% 
   pivot_longer(names_to = "volume",  # Making a new column named "volume"
                values_to = "leg",    # Making a new column named "leg"
                cols = single:multiple) %>% 
@@ -153,7 +153,7 @@ leg_volume <- exscidata::dxadata %>%
 
 ## Create another small dataset containining lean mass/leg information
 lean_mass <- exscidata::dxadata %>% 
-  select(participant, time, starts_with("lean.") & contains("leg")) %>%
+  select(participant, time, include, starts_with("lean.") & contains("leg")) %>%
   select(-lean.legs) %>% # Write "contains ("_legs") instead to make code shorter
   pivot_longer(names_to = "leg",
                values_to = "leanmass",
@@ -168,9 +168,180 @@ lean_mass <- exscidata::dxadata %>%
 # Inner_join only uses variables that exist in both datasets (removes variables) so that we dont get missing values
 # If your dataset is complete, it is not 
 
-full_join(leg_volume, lean_mass)
+lean_mass <- full_join(leg_volume, lean_mass)
 
 
 
 
 ```
+
+#### Include and exclude variables
+```{r}
+
+lean_mass %>% 
+  filter(include == "incl") %>% # Select only the "incl" variables
+  print()
+
+lean_mass %>% 
+  filter(include != "excl") %>% # Not select the "excl" variables
+  print()
+
+lean_mass %>% 
+  filter(!(include != "excl")) %>% # Not select not "excl" variables
+  print()
+
+INCL <- lean_mass$include == "incl"  # True and false to statement
+# $ means that in this dataset, I want the variable include
+
+!INCL # True shifts to false
+
+lean_mass %>% 
+  filter(INCL) %>% 
+  print()
+
+
+lean_mass %>% 
+  filter(include == "excl" | volume == "single" & leanmass > 9000) %>% 
+  # Include "excl" or volume = "single" and leanmass over 9000
+  print()
+
+
+
+
+lean_mass %>% 
+  filter(include == "incl") %>% # Select only the "incl" variables
+  print()
+
+
+data.frame(lean_mass) %>% # Making the tibble to a data frame
+  mutate(leanmass = if_else(time == "pre", leanmass - 1000, leanmass)) %>% 
+  group_by(time) %>% # Group_by revert the data frame back to a tibble
+  filter(leanmass > median(leanmass)) %>% 
+  group_by(time) %>%
+  summarize(n = n()) %>% 
+  print()
+
+
+```
+
+
+#### Summarize
+```{r}
+
+lean_mass |> 
+  filter(include == "incl") |> 
+  group_by(volume, time) |>  
+  summarise(Median = median(leanmass)) |>  
+  group_by() |> 
+  print()
+
+# Obs! group_by sticks with the data unless you ungroup (group_by())
+
+lean_mass |>
+  filter(include == "incl") |>
+  
+  summarise(Median = median(leanmass),
+            Mean = mean(leanmass),
+            SD = sd(leanmass),
+            q25 = quantile(leanmass, 0.25),
+            q75 = quantile(leanmass, 0.75),
+            Min = min(leanmass),
+            Max = max(leanmass),
+            
+            .by = c(time, volume)) |> # Vil ikke groupe seg
+  print()
+
+
+
+
+
+
+
+```
+
+
+Have this in a script?
+
+```{r}
+# X Source on Save (running the code each time the file is saved)
+# crtl + shift + F10 = restarting R session
+
+
+# Load packages
+library(tidyverse)
+library(exscidata)
+library(ggplot2)
+
+
+# Plot using ggplot2
+
+leg_volume <- exscidata::dxadata %>% 
+  select(participant, time, include, multiple, single) %>% 
+  pivot_longer(names_to = "volume",  
+               values_to = "leg",    
+               cols = single:multiple) %>% 
+  distinct(participant, volume, leg) %>%  
+  print()
+
+lean_mass <- exscidata::dxadata %>% 
+  select(participant, time, include, starts_with("lean.") & contains("leg")) %>%
+  select(-lean.legs) %>% 
+  pivot_longer(names_to = "leg",
+               values_to = "leanmass",
+               cols = starts_with("lean")) %>% 
+  mutate(leg = if_else(leg == "lean.left_leg", "L", "R")) %>% 
+  print()
+
+lean_mass <- full_join(leg_volume, lean_mass) %>% 
+  print()
+
+
+lean_mass_sum <- lean_mass |>
+  filter(include == "incl") |>
+  group_by(time, volume) |>
+  summarise(Median = median(leanmass),
+            Mean = mean(leanmass),
+            SD = sd(leanmass),
+            q25 = quantile(leanmass, 0.25),
+            q75 = quantile(leanmass, 0.75),
+            Min = min(leanmass),
+            Max = max(leanmass)) |> 
+  print()
+
+
+ p <- lean_mass_sum |>
+  filter(include == "incl") |>
+  mutate(time, factor(time, levels = c("pre", "post")))|>
+  ggplot(aes(time, leanmass, fill = volume)) + 
+  geom_boxplot() |>
+  print()
+
+
+
+
+p <- ggplot(data = lean_mass_sum,
+            aes(time, Median, color = volume)) +
+     geom_point() +
+     geom_point(aes(y = Mean), shape = 21)
+p
+
+
+# Save the file as a pdf-file
+ggsave("figures/lean_mass.pdf",
+       p,
+       width = 8.9,
+       height = 8.8,
+       units = "cm")
+
+# Have a window open in internet to show the pdf-file and refresh to see 
+# changes when code are changed
+
+
+
+
+
+```
+
+
+
+
