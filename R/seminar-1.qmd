@@ -7,6 +7,51 @@ editor_options:
   chunk_output_type: console
 ---
 
+
+
+```{r}
+
+library(readr)
+library(readxl)
+
+cycling_data <-
+  read_excel("data/tr036_dxa_data_21.10.24.xlsx", na = "na") %>%
+  mutate(VAT_masse = as.numeric(str_extract(VAT_masse, "//d//d//d,//d"))) %>% print()
+  #mutate(VAT_masse = as.numeric(str_replace(VAT_masse, " ", ""))) %>% 
+           #) %>% 
+  print()
+
+
+
+  
+  
+  glimpse()
+  
+  print() 
+  dplyr::select(id, period, timepoint, age, date, VAT_masse) %>% 
+  mutate(as.numeric(VAT_masse)) %>% print()
+  pivot_longer(names_to = "variable", values_to = "value", cols = VAT_masse) %>%
+  mutate(value = gsub("kg", "", value),
+         value = str_replace_all(value,"\\s", ""),
+         value = as.numeric(value))
+  print()
+
+
+  
+data <- read.csv("data/tr036_dxa_hele kroppen komp.txt", sep = "\t", header = TRUE) %>% 
+  print()
+  
+  
+
+
+
+```
+
+
+
+
+
+
 ### **Seminar 1 10.10.23 notes**
 
 #### Tips til Repeat
@@ -47,6 +92,8 @@ library(tidyverse)
 library(exscidata)
 
 dplyr::starwars
+
+starwars %>% view()
 
 # Base R forward pipe operator
 exscidata::dxadata |> # Smart to define that I am searching for this dataset in this package
@@ -176,6 +223,7 @@ lean_mass <- full_join(leg_volume, lean_mass)
 ```
 
 #### Include and exclude variables
+
 ```{r}
 
 lean_mass %>% 
@@ -224,8 +272,8 @@ data.frame(lean_mass) %>% # Making the tibble to a data frame
 
 ```
 
-
 #### Summarize
+
 ```{r}
 
 lean_mass |> 
@@ -258,7 +306,6 @@ lean_mass |>
 
 
 ```
-
 
 Have this in a script?
 
@@ -341,7 +388,3 @@ ggsave("figures/lean_mass.pdf",
 
 
 ```
-
-
-
-
