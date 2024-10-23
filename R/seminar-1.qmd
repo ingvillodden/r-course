@@ -13,35 +13,33 @@ editor_options:
 
 library(readr)
 library(readxl)
+library(tidyverse)
+library(writexl)
 
-cycling_data <-
-  read_excel("data/tr036_dxa_data_21.10.24.xlsx", na = "na") %>%
-  mutate(VAT_masse = as.numeric(str_extract(VAT_masse, "//d//d//d,//d"))) %>% print()
-  #mutate(VAT_masse = as.numeric(str_replace(VAT_masse, " ", ""))) %>% 
-           #) %>% 
+
+chr_dxa_data <-
+  read_excel("data/tr036_dxa_all_data_22.20.24.xlsx", na = "na") %>% 
+  
+  select(id, period, timepoint, Dato, `VAT-masse`, `VAT-volum`, `Bein BMC`, `Kropp BMC`, `Hele BMC`, `Total venstre BMC`, `Total hoyre BMC`, `Bein Beinmasse`, `Kropp Beinmasse`, `Hele Beinmasse`, `Total hoyre Beinmasse`, `Total venstre Beinmasse`, `Armer Fettmasse`, `Arm hoyre Fettmasse`, `Arm venstre Fettmasse`, `Bein Fettmasse`, `Bein hoyre Fettmasse`, `Bein venstre Fettmasse`, `Kropp Fettmasse`, `Overkropp hoyre Fettmasse`, `Overkropp venstre Fettmasse`, `Android Fettmasse`, `Gynoid Fettmasse`, `Hele Fettmasse`, `Total hoyre Fettmasse`, `Total venstre Fettmasse`, `Armer Mager masse`, `Arm hoyre Mager masse`, `Arm venstre Mager masse`, `Bein Mager masse`, `Bein hoyre Mager masse`, `Bein venstre Mager masse`, `Kropp Mager masse`, `Overkropp hoyre Mager masse`, `Overkropp venstre Mager masse`, `Android Mager masse`, `Gynoid Mager masse`, `Hele Mager masse`, `Total hoyre Mager masse`, `Total venstre Mager masse`, `Armer Vevmasse`, `Arm hoyre Vevmasse`,`Arm venstre Vevmasse`, `Bein Vevmasse`, `Bein hoyre Vevmasse`, `Bein venstre Vevmasse`, `Kropp Vevmasse`, `Overkropp hoyre Vevmasse`, `Overkropp venstre Vevmasse`, `Android Vevmasse`, `Gynoid Vevmasse`, `Hele Vevmasse`, `Total hoyre Vevmasse`, `Total venstre Vevmasse`, `Armer Fettfri masse`, `Arm hoyre Fettfri masse`, `Arm venstre Fettfri masse`, `Bein Fettfri masse`, `Bein hoyre Fettfri masse`, `Bein venstre Fettfri masse`, `Kropp Fettfri masse`, `Overkropp hoyre Fettfri masse`, `Overkropp venstre Fettfri masse`, `Android Fettfri masse`, `Gynoid Fettfri masse`, `Hele Fettfri masse`, `Total hoyre Fettfri masse`, `Total venstre Fettfri masse`, `Armer Total masse`, `Arm hoyre Total masse`, `Arm venstre Total masse`, `Bein Total masse`, `Bein hoyre Total masse`, `Bein venstre Total masse`, `Kropp Total masse`, `Overkropp hoyre Total masse`, `Overkropp venstre Total masse`, `Android Total masse`, `Gynoid Total masse`, `Hele Total masse`, `Total hoyre Total masse`, `Total venstre Total masse`) %>% 
+    
+  pivot_longer(names_to = "variable", values_to = "value", cols = `VAT-masse`:`Total venstre Total masse`) %>% 
+  
+  mutate(value = str_replace_all(value,"\\u00a0", ""),
+         value = gsub(",", ".", value),
+         value = as.numeric(value)) %>%
   print()
 
 
-
+dbl_dxa_data <- read_excel("data/tr036_dxa_all_data_22.20.24.xlsx", na = "na") %>%
   
+  select(-`VAT-masse`, -`VAT-volum`, -`Bein BMC`, -`Kropp BMC`, -`Hele BMC`, -`Total venstre BMC`, -`Total hoyre BMC`, -`Bein Beinmasse`, -`Kropp Beinmasse`, -`Hele Beinmasse`, -`Total hoyre Beinmasse`, -`Total venstre Beinmasse`, -`Armer Fettmasse`, -`Arm hoyre Fettmasse`, -`Arm venstre Fettmasse`, -`Bein Fettmasse`, -`Bein hoyre Fettmasse`, -`Bein venstre Fettmasse`, -`Kropp Fettmasse`, -`Overkropp hoyre Fettmasse`, -`Overkropp venstre Fettmasse`, -`Android Fettmasse`, -`Gynoid Fettmasse`, -`Hele Fettmasse`, -`Total hoyre Fettmasse`, -`Total venstre Fettmasse`, -`Armer Mager masse`, -`Arm hoyre Mager masse`, -`Arm venstre Mager masse`, -`Bein Mager masse`, -`Bein hoyre Mager masse`, -`Bein venstre Mager masse`, -`Kropp Mager masse`, -`Overkropp hoyre Mager masse`, -`Overkropp venstre Mager masse`, -`Android Mager masse`, -`Gynoid Mager masse`, -`Hele Mager masse`, -`Total hoyre Mager masse`, -`Total venstre Mager masse`, -`Armer Vevmasse`, -`Arm hoyre Vevmasse`, -`Arm venstre Vevmasse`, -`Bein Vevmasse`, -`Bein hoyre Vevmasse`, -`Bein venstre Vevmasse`, -`Kropp Vevmasse`, -`Overkropp hoyre Vevmasse`, -`Overkropp venstre Vevmasse`, -`Android Vevmasse`, -`Gynoid Vevmasse`, -`Hele Vevmasse`, -`Total hoyre Vevmasse`, -`Total venstre Vevmasse`, -`Armer Fettfri masse`, -`Arm hoyre Fettfri masse`, -`Arm venstre Fettfri masse`, -`Bein Fettfri masse`, -`Bein hoyre Fettfri masse`, -`Bein venstre Fettfri masse`, -`Kropp Fettfri masse`, -`Overkropp hoyre Fettfri masse`, -`Overkropp venstre Fettfri masse`, -`Android Fettfri masse`, -`Gynoid Fettfri masse`, -`Hele Fettfri masse`, -`Total hoyre Fettfri masse`, -`Total venstre Fettfri masse`, -`Armer Total masse`, -`Arm hoyre Total masse`, -`Arm venstre Total masse`, -`Bein Total masse`, -`Bein hoyre Total masse`, -`Bein venstre Total masse`, -`Kropp Total masse`, -`Overkropp hoyre Total masse`, -`Overkropp venstre Total masse`, -`Android Total masse`, -`Gynoid Total masse`, -`Hele Total masse`, -`Total hoyre Total masse`, -`Total venstre Total masse`, -`TBLH BMD`, -`TBLH BMC`, -`TBLH Total masse`, -`TBLH Beinmasse`, -`TBLH Fettmasse`, -`TBLH Mager masse`, -`TBLH Vevmasse`, -`TBLH Fettfri masse`, -`Total venstre Total masse`, -`TBLH Omrade %fett`, -`TBLH Vev %fett`) %>% 
   
-  glimpse()
-  
-  print() 
-  dplyr::select(id, period, timepoint, age, date, VAT_masse) %>% 
-  mutate(as.numeric(VAT_masse)) %>% print()
-  pivot_longer(names_to = "variable", values_to = "value", cols = VAT_masse) %>%
-  mutate(value = gsub("kg", "", value),
-         value = str_replace_all(value,"\\s", ""),
-         value = as.numeric(value))
+  pivot_longer(names_to = "variable", values_to = "value", cols = `Alder`:`Total venstre Vev %fett`) %>%
+  full_join(chr_dxa_data) %>% 
+  pivot_wider(names_from = variable,
+              values_from = value) %>%
   print()
-
-
-  
-data <- read.csv("data/tr036_dxa_hele kroppen komp.txt", sep = "\t", header = TRUE) %>% 
-  print()
-  
-  
+    
 
 
 
